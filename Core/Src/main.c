@@ -42,6 +42,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+uint32_t pasos=0;
 
 /* USER CODE END PV */
 
@@ -55,6 +56,72 @@ static void MX_GPIO_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+void delay_us_dwt_init()
+{
+	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
+    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+    pasos=(HAL_RCC_GetSysClockFreq()/1000000);//le el cristal pasa a us
+
+}
+
+//retardo por debbuger
+void delay_us_dwt(uint32_t reta)
+{
+
+DWT->CYCCNT=0;
+while( DWT->CYCCNT<=pasos*reta);//multiplica por us
+}
+
+void Sound_play(uint32_t frec,uint32_t dura)
+{
+	uint32_t dela=500000/frec;//  la mitad de un mega
+	uint32_t  repe=frec*dura/1000;// calcula cuantas veces se repite
+
+		while(repe--)
+	  {
+	HAL_GPIO_WritePin(parlante_GPIO_Port, parlante_Pin,1);
+	delay_us_dwt(dela);
+	  HAL_GPIO_WritePin(parlante_GPIO_Port, parlante_Pin,0);
+	  delay_us_dwt(dela);
+      }
+
+}
+
+
+void melodia1 ()
+{
+ // Intro icónica: Mi - Mi - Mi - Do - Mi - Sol - Sol(G3)
+    Sound_play(659, 150); HAL_Delay(50); // Mi5
+    Sound_play(659, 150); HAL_Delay(150); // Mi5
+    Sound_play(659, 150); HAL_Delay(150); // Mi5
+    Sound_play(523, 150); HAL_Delay(50); // Do5
+    Sound_play(659, 150); HAL_Delay(150); // Mi5
+    Sound_play(784, 300); HAL_Delay(150); // Sol5
+    Sound_play(392, 300); HAL_Delay(300); // Sol4
+
+    // Frase 1: Do - Sol - Mi - La - Si - Sib - La
+    Sound_play(523, 200); HAL_Delay(100); // Do5
+    Sound_play(392, 200); HAL_Delay(100); // Sol4
+    Sound_play(330, 200); HAL_Delay(100); // Mi4
+    Sound_play(440, 150); HAL_Delay(50);  // La4
+    Sound_play(494, 150); HAL_Delay(50);  // Si4
+    Sound_play(466, 150); HAL_Delay(50);  // Sib4 (La#4)
+    Sound_play(440, 200); HAL_Delay(100); // La4
+
+    // Frase 2: Sol - Mi - Sol - La - Fa - Sol - Mi
+    Sound_play(392, 150); HAL_Delay(50);  // Sol4
+    Sound_play(659, 150); HAL_Delay(50);  // Mi5
+    Sound_play(784, 150); HAL_Delay(50);  // Sol5
+    Sound_play(880, 200); HAL_Delay(50);  // La5
+    Sound_play(698, 150); HAL_Delay(50);  // Fa5
+    Sound_play(784, 150); HAL_Delay(50);  // Sol5
+    Sound_play(659, 200); HAL_Delay(100); // Mi5
+    Sound_play(523, 150); HAL_Delay(50);  // Do5
+    Sound_play(587, 150); HAL_Delay(50);  // Re5
+    Sound_play(494, 200); HAL_Delay(200); // Si4
+
+    HAL_Delay(1000); // Pausa antes de repetir
+}
 /* USER CODE END 0 */
 
 /**
@@ -87,32 +154,16 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
-  
+  delay_us_dwt_init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-   HAL_Delay(1200);
-   HAL_GPIO_WritePin(DPA_GPIO_Port, DPA_Pin, 1);
-   HAL_GPIO_WritePin(DPB_GPIO_Port, DPB_Pin, 0);
-   HAL_GPIO_WritePin(DPC_GPIO_Port, DPC_Pin, 1);
-   HAL_GPIO_WritePin(DPD_GPIO_Port, DPD_Pin, 1);
-   HAL_GPIO_WritePin(DPE_GPIO_Port, DPE_Pin, 0);
-   HAL_GPIO_WritePin(DPF_GPIO_Port, DPF_Pin, 1);
-   HAL_GPIO_WritePin(DPG_GPIO_Port, DPG_Pin, 1);*/
-   GPIOA->ODR = 0b00111001;
-   HAL_Delay(1000);
-   GPIOA->ODR = 118;
-   HAL_Delay(1000);
-   GPIOA->ODR = 0x77;
-   HAL_Delay(1000);
-   GPIOA->ODR = 0b00111111;
-   HAL_Delay(1000);
-   
+ 
 
+ melodia1();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -137,10 +188,14 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM = 25;
+  RCC_OscInitStruct.PLL.PLLN = 128;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = 4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -150,8 +205,8 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV4;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
@@ -175,21 +230,22 @@ static void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(parlante_GPIO_Port, parlante_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, DPA_Pin|DPB_Pin|DPC_Pin|DPD_Pin
                           |DPE_Pin|DPF_Pin|DPG_Pin|GPIO_PIN_7, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : LED_Pin */
-  GPIO_InitStruct.Pin = LED_Pin;
+  /*Configure GPIO pin : parlante_Pin */
+  GPIO_InitStruct.Pin = parlante_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LED_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(parlante_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : DPA_Pin DPB_Pin DPC_Pin DPD_Pin
                            DPE_Pin DPF_Pin DPG_Pin PA7 */
