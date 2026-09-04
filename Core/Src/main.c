@@ -94,8 +94,25 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-    HAL_Delay(400);
+    /* HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+   HAL_Delay(1200);
+   HAL_GPIO_WritePin(DPA_GPIO_Port, DPA_Pin, 1);
+   HAL_GPIO_WritePin(DPB_GPIO_Port, DPB_Pin, 0);
+   HAL_GPIO_WritePin(DPC_GPIO_Port, DPC_Pin, 1);
+   HAL_GPIO_WritePin(DPD_GPIO_Port, DPD_Pin, 1);
+   HAL_GPIO_WritePin(DPE_GPIO_Port, DPE_Pin, 0);
+   HAL_GPIO_WritePin(DPF_GPIO_Port, DPF_Pin, 1);
+   HAL_GPIO_WritePin(DPG_GPIO_Port, DPG_Pin, 1);*/
+   GPIOA->ODR = 0b00111001;
+   HAL_Delay(1000);
+   GPIOA->ODR = 118;
+   HAL_Delay(1000);
+   GPIOA->ODR = 0x77;
+   HAL_Delay(1000);
+   GPIOA->ODR = 0b00111111;
+   HAL_Delay(1000);
+   
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -157,10 +174,15 @@ static void MX_GPIO_Init(void)
   /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, DPA_Pin|DPB_Pin|DPC_Pin|DPD_Pin
+                          |DPE_Pin|DPF_Pin|DPG_Pin|GPIO_PIN_7, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : LED_Pin */
   GPIO_InitStruct.Pin = LED_Pin;
@@ -168,6 +190,15 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LED_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : DPA_Pin DPB_Pin DPC_Pin DPD_Pin
+                           DPE_Pin DPF_Pin DPG_Pin PA7 */
+  GPIO_InitStruct.Pin = DPA_Pin|DPB_Pin|DPC_Pin|DPD_Pin
+                          |DPE_Pin|DPF_Pin|DPG_Pin|GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
 
